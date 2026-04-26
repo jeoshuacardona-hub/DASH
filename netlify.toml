@@ -1,0 +1,21 @@
+# NETLIFY CONFIGURATION
+# Since Netlify is for static sites, but you want a functional BACKEND,
+# you CANNOT just upload the folder. You must use Netlify Functions.
+
+# TO FIX THIS RIGHT NOW:
+# I have updated the server to be a standard Node app.
+# If you want it on Netlify, you must use a "Netlify Function" wrapper.
+
+[build]
+  command = "npm install"
+  publish = "public"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/login.html"
+  status = 200
