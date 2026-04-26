@@ -1,0 +1,46 @@
+const { Sequelize, DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
+
+// USAMOS /tmp/ PARA QUE FUNCIONE EN RENDER SIN ERRORES DE PERMISO
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: process.env.NODE_ENV === 'production' ? '/tmp/database.sqlite' : './database.sqlite',
+  logging: false
+});
+
+const User = sequelize.define('User', {
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
+});
+
+async function ensureUserExists() {
+  try {
+    await sequelize.sync();
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@skyweb.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123';
+
+    const userExists = await User.findOne({ where: { email: adminEmail } });
+    if (!userExists) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await User.create({
+        email: adminEmail,
+        password: hashedPassword
+      });
+      console.log('👤 Admin user created successfully in SQLite DB');
+    } else {
+      console.log('👤 Admin user already exists in SQLite DB');
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring admin user:', error);
+  }
+}
+
+module.exports = { User, ensureUserExists, sequelize };
